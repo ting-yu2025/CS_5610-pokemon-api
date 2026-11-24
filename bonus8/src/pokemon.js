@@ -103,10 +103,11 @@ app.post('/api/pokemon', async (c) => {
     return c.json({ error: 'species is required; name must be a string; id is generated' }, 400)
   }
 
+  const species = body.species.trim()
   const entry = {
     id: randomId(),
-    name: body.name?.trim() ?? body.species.trim(),
-    species: body.species.trim(),
+    name: body.name === undefined ? species : body.name.trim(),
+    species,
     health: Math.floor(Math.random() * 51) + 50,
     level: Math.floor(Math.random() * 10) + 1,
     owner: username,
@@ -120,10 +121,10 @@ app.delete('/api/pokemon/:id', (c) => {
   const username = currentUser(c)
   if (!username) return c.json({ error: 'login required' }, 401)
 
-  const idText = c.req.param('id')
-  if (!/^[1-9]\d*$/.test(idText)) return c.json({ error: 'id must be a positive integer' }, 400)
-  const id = Number(idText)
-  if (!Number.isSafeInteger(id)) return c.json({ error: 'id must be a positive integer' }, 400)
+  const id = Number(c.req.param('id'))
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    return c.json({ error: 'id must be a positive integer' }, 400)
+  }
 
   const index = pokemon.findIndex((entry) => entry.id === id)
   if (index === -1) return c.json({ error: 'pokemon not found' }, 404)
